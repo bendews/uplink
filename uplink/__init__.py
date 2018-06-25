@@ -1,7 +1,7 @@
 # Local imports
 from uplink.__about__ import __version__
 from uplink._extras import install, load_entry_points as _load_entry_points
-from uplink import returns, types
+from uplink import accepts, content_type, returns, types
 from uplink.clients import AiohttpClient, RequestsClient, TwistedClient
 
 # todo: remove this in v1.0.0
@@ -47,6 +47,8 @@ __all__ = [
     "install",
     "returns",
     "types",
+    "accepts",
+    "content_type",
     "AiohttpClient",
     "RequestsClient",
     "TwistedClient",
