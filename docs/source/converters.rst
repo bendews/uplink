@@ -63,7 +63,7 @@ this feature:
 
     .. code-block:: python
 
-        @returns.from_json
+        @accepts.json
         @get("/users")
         def get_users(self) -> types.List[str]:
             """Fetches all users"""
@@ -76,7 +76,7 @@ this feature:
 
     .. code-block:: python
 
-        @returns.from_json
+        @accepts.json
         @get("/users")
         def get_users(self) -> types.Dict[str, str]:
             """Fetches all users"""

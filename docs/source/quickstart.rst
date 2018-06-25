@@ -112,7 +112,7 @@ annotation:
 
 .. code:: python
 
-    @form_url_encoded
+    @content_type.form_url_encoded
     @post("user/edit")
     def update_user(self, first_name: Field, last_name: Field): pass
 
@@ -121,7 +121,7 @@ method. Parts are declared using the :py:class:`~uplink.Part` annotation:
 
 .. code:: python
 
-    @multipart
+    @content_type.multipart
     @put("user/photo")
     def update_user(self, photo: Part, description: Part): pass
 
@@ -130,8 +130,8 @@ JSON data is sent when :py:class:`~uplink.json` decorates the method. The
 
 .. code:: python
 
-    @uplink.json
-    @uplink.patch("/user")
+    @content_type.json
+    @patch("/user")
     def update_user(self, **user_info: uplink.Body):
         """Update an authenticated user."""
 
@@ -197,13 +197,13 @@ libraries such as :py:mod:`marshmallow` or use :py:class:`uplink.loads`
 to write custom conversion logic that fits your unique needs.
 
 At the least, you need to specify the expected return type using a
-decorator from the :py:class:`uplink.returns` module. For example,
-:py:class:`uplink.returns.from_json` is handy when working with APIs that
+decorator from the :py:mod:`uplink.accepts` module. For example,
+:py:class:`uplink.accepts.json` is handy when working with APIs that
 provide JSON responses:
 
 .. code-block:: python
 
-    @returns.from_json(User)
+    @accepts.json(schema=User)
     @get("users/{username}")
     def get_user(self, username): pass
 
@@ -211,7 +211,7 @@ Python 3 users can alternatively use a return type hint:
 
 .. code-block:: python
 
-    @returns.from_json
+    @accepts.json
     @get("users/{username}")
     def get_user(self, username) -> User: pass
 
