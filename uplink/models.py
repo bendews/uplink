@@ -20,8 +20,8 @@ class RequestBodyConverterFactory(converters.Factory):
 
 
 class _Delegate(object):
-    def __init__(self, model_class, annotations, func):
-        self._model_class = model_class
+    def __init__(self, base_class, annotations, func):
+        self._base_class = base_class
         self._annotations = annotations
         self._func = func
 
@@ -32,7 +32,7 @@ class _Delegate(object):
 
     def _is_relevant(self, type_, request_definition):
         return utils.is_subclass(
-            type_, self._model_class
+            type_, self._base_class
         ) and self._contains_annotations(
             request_definition.argument_annotations,
             request_definition.method_annotations,
@@ -58,14 +58,14 @@ class _ModelConverterBuilder(object):
     def __init__(self, base_class, annotations=()):
         """
         Args:
-            base_class (type): The base model class.
+            base_class (type): The base class.
         """
-        self._model_class = base_class
+        self._base_class = base_class
         self._annotations = set(annotations)
 
     def using(self, func):
         """Sets the converter strategy to the given function."""
-        delegate = _Delegate(self._model_class, self._annotations, func)
+        delegate = _Delegate(self._base_class, self._annotations, func)
         return self._wrap_delegate(delegate)
 
     def _wrap_delegate(self, delegate):  # pragma: no cover
@@ -90,7 +90,7 @@ class loads(_ModelConverterBuilder):
     """
     Builds a custom object deserializer.
 
-    This class takes a single argument, the base model class, and
+    This decorator takes a single argument, the target base class, and
     registers the decorated function as a deserializer for that base
     class and all subclasses.
 
@@ -100,8 +100,8 @@ class loads(_ModelConverterBuilder):
 
     .. code-block:: python
 
-        @loads(ModelBase)
-        def load_model(model_cls, data):
+        @loads(BaseUser)
+        def load_user(user_cls, data):
             ...
 
     .. versionadded:: v0.5.0
@@ -149,9 +149,9 @@ class dumps(_ModelConverterBuilder):
     """
     Builds a custom object serializer.
 
-    This decorator takes a single argument, the base model class, and
-    registers the decorated function as a serializer for that base
-    class and all subclasses.
+    This decorator takes a single argument, the target base class, and
+    registers the decorated function as a serializer for that base class
+    and all subclasses.
 
     Further, the decorated function should accept two positional
     arguments: (1) the encountered type (which can be the given base
@@ -159,8 +159,8 @@ class dumps(_ModelConverterBuilder):
 
     .. code-block:: python
 
-        @dumps(ModelBase)
-        def deserialize_model(model_cls, model_instance):
+        @dumps(BaseUser)
+        def deserialize_user(user_cls, user_instance):
             ...
 
     .. versionadded:: v0.5.0
@@ -180,9 +180,9 @@ class dumps(_ModelConverterBuilder):
 
         .. code-block:: python
 
-            @dumps.to_json(ModelBase)
-            def to_json(model_cls, model_instance):
-                return model_instance.to_json()
+            @dumps.to_json(BaseUser)
+            def to_json(user_cls, user_instance):
+                return user_instance.to_json()
 
         Notably, only consumer methods that are decorated with
         py:class:`uplink.json` and have one or more argument annotations
@@ -191,7 +191,7 @@ class dumps(_ModelConverterBuilder):
 
         For example, the following consumer method would leverage the
         :py:func:`to_json` strategy defined above, given
-        :py:class:`User` is a subclass of :py:class:`ModelBase`:
+        :py:class:`User` is a subclass of :py:class:`BaseUser`:
 
         .. code-block:: python
 

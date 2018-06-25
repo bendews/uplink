@@ -5,7 +5,7 @@ import sys
 from uplink import decorators
 from uplink.converters import keys, interfaces
 
-__all__ = ["from_json", "json", "model"]
+__all__ = ["from_json", "json", "schema", "model"]
 
 
 class _ReturnsBase(decorators.MethodAnnotation):
@@ -117,18 +117,20 @@ class json(_ReturnsBase):
 
     __dummy_converter = _DummyConverter()
 
-    def __init__(self, model=None, member=()):
-        self._model = model
+    def __init__(self, schema=None, member=(), **kwargs):
+        self._schema = kwargs.get("model", schema)
         self._member = member
 
     def _get_return_type(self, return_type):
-        # If the model and return type are None, the strategy should
+        # If the schema and return type are None, the strategy should
         # directly return the JSON body of the HTTP response, instead of
-        # trying to deserialize it into a model. In this case, by
+        # trying to deserialize it into a schema. In this case, by
         # defaulting the return type to the dummy converter, which
         # implements this pass-through behavior, we ensure that
         # _make_strategy is called.
-        default = self.__dummy_converter if self._model is None else self._model
+        default = (
+            self.__dummy_converter if self._schema is None else self._schema
+        )
 
         return default if return_type is None else return_type
 
@@ -139,19 +141,20 @@ class json(_ReturnsBase):
 from_json = json
 """
     Specifies that the decorated consumer method should produce
-    instances of a :py:obj:`model` class using a registered
+    instances of a :py:obj:`schema` class using a registered
     deserialization strategy (see :py:meth:`uplink.loads.from_json`)
 
     This decorator accepts the same arguments as
     :py:class:`uplink.returns.json`.
 
     Often, a JSON response body represents a model in your application.
-    If an existing Python object encapsulates this model, use the
-    :py:attr:`model` argument to specify it as the return type:
+    If an existing Python class encapsulates the schema for this model,
+    use the :py:attr:`schema` argument to specify the class as the
+    expected return type:
 
     .. code-block:: python
 
-        @returns.from_json(model=User)
+        @returns.from_json(schema=User)
         @get("/users/{username}")
         def get_user(self, username):
             \"""Get a specific user.\"""
@@ -179,7 +182,7 @@ from_json = json
 
 
 # noinspection PyPep8Naming
-class model(_ReturnsBase):
+class schema(_ReturnsBase):
     """
     Specifies that the function returns a specific class.
 
@@ -196,7 +199,7 @@ class model(_ReturnsBase):
 
     .. code-block:: python
 
-        @returns.model(UserSchema)
+        @returns.schema(UserSchema)
         @get("/users/{username}")
         def get_user(self, username):
             \"""Get a specific user.\"""
@@ -218,10 +221,13 @@ class model(_ReturnsBase):
         return converter
 
 
+model = schema
+
+
 class _ModuleProxy(object):
     __module = sys.modules[__name__]
 
-    model = model
+    schema = model = schema
     json = json
     from_json = from_json
     __all__ = __module.__all__
@@ -230,7 +236,7 @@ class _ModuleProxy(object):
         return getattr(self.__module, item)
 
     def __call__(self, *args, **kwargs):
-        return model(*args, **kwargs)
+        return schema(*args, **kwargs)
 
 
 sys.modules[__name__] = _ModuleProxy()

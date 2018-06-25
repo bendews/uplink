@@ -92,9 +92,9 @@ and its subclasses:
 
 .. code-block:: python
 
-    # Registers the function as a loader for the given model class.
-    @loads.from_json(Model)
-    def load_model_from_json(model_type, json):
+    # Registers the function as a loader for the user classes.
+    @loads.from_json(BaseUser)
+    def load_user_from_json(user_cls, json):
         ...
 
 .. note::
@@ -108,7 +108,7 @@ instantiating a :py:class:`~uplink.Consumer` subclass, through the
 
 .. code-block:: python
 
-    github = GitHub(BASE_URL, converter=load_model_from_json)
+    github = GitHub(BASE_URL, converter=load_user_from_json)
 
 Alternatively, you can add the :py:meth:`uplink.loads.install` or
 :py:meth:`uplink.dumps.install` decorator to register the converter
@@ -118,10 +118,10 @@ explicitly provided through the :py:obj:``converter`` parameter:
 
 .. code-block:: python
 
-    # Register the function as a default loader for the given model class.
+    # Register the function as a default loader for user classes.
     @loads.install
-    @loads.from_json(Model)
-    def load_model_from_json(model_type, json):
+    @loads.from_json(BaseUser)
+    def load_user_from_json(user_cls, json):
         ...
 
 .. autoclass:: uplink.loads
