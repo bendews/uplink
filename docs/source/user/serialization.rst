@@ -3,13 +3,11 @@
 Serialization
 *************
 
-Webservices use serialization formats to transmit structured data (a
-list of repositories, a single user, a comment on a blog post, etc.)
-over the network as a stream of bytes. For example, many modern public
-APIs (e.g., `GitHub API v3 <https://developer.github.com/v3/>`_) support
-JSON, while a private API used strictly within an organization may use a
-more compact format, such as `Protocol Buffers
-<https://developers.google.com/protocol-buffers/>`_.
+Various serialization formats exist for transmitting structured data
+over the network: JSON is a popular choice amongst many public APIs
+partly because its human readable, while a more compact format, such as
+`Protocol Buffers <https://developers.google.com/protocol-buffers/>`_,
+may be more appropriate for a private API used within an organization.
 
 Regardless what serialization format your API uses, with a little bit of
 help, Uplink can automatically decode responses and encode request
@@ -18,7 +16,7 @@ abstracts the HTTP layer from the callers of your API client.
 
 This document walks you through how to leverage Uplink's serialization support,
 including integrations for third-party serialization libraries like
-:mod:`marshmallow` and tools for writing custom conversion strategy that
+:mod:`marshmallow` and tools for writing custom conversion strategies that
 fit your unique needs.
 
 Using Marshmallow Schemas
@@ -26,7 +24,7 @@ Using Marshmallow Schemas
 
 :mod:`marshmallow` is a framework-agnostic, object serialization library
 for Python. Uplink comes with built-in support for Marshmallow; you can
-integrate your Marshmallow schemas with Uplink for easy serialization.
+integrate your Marshmallow schemas with Uplink for easy JSON (de)serialization.
 
 First, create a :class:`marshmallow.Schema`, declaring any necessary
 conversions and validations. Here's a simple example:
@@ -77,14 +75,11 @@ schema:
 For a more complete example of Uplink's :mod:`marshmallow` support,
 check out `this example on GitHub <https://github.com/prkumar/uplink/tree/master/examples/marshmallow>`_.
 
-Custom Conversion
-=================
 
-Uplink makes it easy to convert an HTTP response body into a custom
-Python object, whether you leverage Uplink's built-in support for
-libraries such as :py:mod:`marshmallow` or use :py:class:`uplink.loads`
-to write custom conversion logic that fits your unique needs.
+Custom JSON Deserialization
+===========================
 
+While :mod:`marshmallow`, you
 At the least, you need to specify the expected return type using a
 decorator from the :py:class:`uplink.returns` module. For example,
 :py:class:`uplink.returns.from_json` is handy when working with APIs that
@@ -128,7 +123,7 @@ The decorated function, :py:func:`user_loader`, can then be passed into the
 
     my_client = MyConsumer(base_url=..., converter=user_loader)
 
-Alternatively, you can add the :py:meth:`uplink.loads.install` decorator to
+Alternatively, you can add the :py:func:`uplink.install` decorator to
 register the converter function as a default converter, meaning the converter
 will be included automatically with any consumer instance and doesn't need to
 be explicitly provided through the :py:obj:`converter` parameter:
@@ -136,7 +131,7 @@ be explicitly provided through the :py:obj:`converter` parameter:
 .. code-block:: python
    :emphasize-lines: 1
 
-    @loads.install
+    @install
     @loads.from_json(User)
     def user_loader(user_cls, json):
         return user_cls(json["id"], json["username"])
@@ -152,9 +147,49 @@ be explicitly provided through the :py:obj:`converter` parameter:
 Converting Collections
 ======================
 
-This section is a work in progress!
+Using
+
 
 Other Serialization Formats (e.g., Protocol Buffers)
 ====================================================
 
 This section is a work in progress!
+
+Writing A Custom Converter
+==========================
+
+Create a :class:`converters.Factory <uplink.converters.Factory>` subclass to
+
+.. code-block:: python
+
+   import pickle
+
+   from uplink import converters
+
+   class PickleFactory(converters.Factory):
+      """Adapter for Python's Pickle protocol."""
+
+      def create_response_body_converter(self, cls, request_definition):
+         return pickle.loads
+
+      def create_request_body_converter(self, cls, request_definition):
+         return pickle.dumps
+
+
+.. code-block:: python
+
+   client = MyApiClient(BASE_URL, converter=PickleFactory())
+
+.. code-block:: python
+   :emphasize-lines: 3
+
+   from uplink import converters, install
+
+   @install
+   class PickleFactory(converters.Factory):
+      ...
+
+For a good example of how to write a strategy for a given serialization
+format, checkout the `this Protobuf extension
+<https://github.com/prkumar/uplink-protobuf/blob/master/uplink_protobuf/converter.py>`_
+for Uplink.

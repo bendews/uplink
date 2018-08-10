@@ -287,7 +287,7 @@ invoked:
     >>> github.get_user("prkumar")
     {'login': 'prkumar', 'id': 10181244, ...
 
-When targeting a subset of the JSON response, you can use the
+You can also target a specific field of the JSON response by using the
 decorator's ``model`` argument to select the target JSON field name:
 
 .. code-block:: python
