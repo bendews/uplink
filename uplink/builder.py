@@ -114,7 +114,7 @@ class Builder(interfaces.CallBuilder):
 
     @converters.setter
     def converters(self, converters):
-        if isinstance(converters, converters.interfaces.Factory):
+        if isinstance(converters, converters_.interfaces.Factory):
             converters = (converters,)
         self._converters = tuple(converters)
         self._converters += converters_.get_default_converter_factories()
@@ -262,9 +262,9 @@ class Consumer(interfaces.Consumer, _Consumer):
         builder.base_url = base_url
         builder.converters = kwargs.pop("converter", converters)
         hooks = kwargs.pop("hook", hooks)
-        if isinstance(hooks, hooks.TransactionHook):
-            hook = (hooks,)
-        builder.add_hook(*hook)
+        if isinstance(hooks, hooks_.TransactionHook):
+            hooks = (hooks,)
+        builder.add_hook(*hooks)
         builder.auth = auth
         builder.client = client
         self.__session = session.Session(builder)
